@@ -18,40 +18,165 @@ Provide a function for the automation test
 
 '''
 
-import os,time,subprocess
+import os,time,subprocess,re
 import uiautomation
 
-class WinUI(object):
-    '''
-    :prop dict properties of windows UI. 
-        e.g.
-            ControlType: str or unicode
-            ClassName: str or unicode
-            AutomationId: str or unicode
-            Name: str or unicode
-            SubName: str or unicode
-            RegexName: str or unicode, supports regex
-            Depth: integer, exact depth from searchFromControl, if set, searchDepth will be set to Depth too
-    '''
-    (prop,index,timeout)=({},1,10)
+class WinElement(object):
     
-    __glob = {}
-        
-    #Context ----
+    __control = {         
+        "index":1,
+        "timeout":10,
+        }
+    
+    __root = uiautomation.GetRootControl()
+    __handles = []
+                    
     @classmethod
-    def SetVar(cls, name, value):
+    def SetControl(cls,**kwargs):
+        '''
+        @param kwargs:  dict properties of windows UI. 
+            e.g.
+                ControlType: str or unicode
+                ClassName: str or unicode
+                AutomationId: str or unicode
+                Name: str or unicode
+                SubName: str or unicode
+                RegexName: str or unicode, supports regex
+                Depth: integer, exact depth from searchFromControl, if set, searchDepth will be set to Depth too
+        '''
+        cls.__control = {"index":1, "timeout":10}
+        cls.__control.update(kwargs)
+    
+    @classmethod
+    def GetControl(cls):
+        return cls.__control
+        
+    @classmethod
+    def SwitchToCurrentControl(cls):
+        ''' switch to the child control '''        
+        cls.__root = uiautomation.ControlFromHandle(cls.__handles[-1])        
+        
+    @classmethod
+    def SwitchToDefaultControl(cls):
+        print(cls.__handles)
+        for h in cls.__handles:
+            print(uiautomation.ControlFromHandle(h).ControlTypeName)
+        if cls.__handles:            
+            cls.__root = uiautomation.ControlFromHandle(cls.__handles[0])
+        else:
+            cls.__root = WinElement.SwitchToRootControl()
+    
+    @classmethod
+    def SwitchToRootControl(cls):
+        ''' switch to root control '''
+        cls.__root = uiautomation.GetRootControl()
+    
+    @classmethod
+    def _element(cls):
+        _prop = cls.__control.copy()
+        control_type = _prop.pop("ControlType", "Control")
+        time_out = _prop.pop("timeout")
+        
+        if control_type in uiautomation.ControlTypeNameDict.values():        
+            control = getattr(cls.__root, control_type)(foundIndex = _prop.pop("index"), **_prop)
+        else:
+            control = cls.__root.Control(foundIndex = _prop.pop("index"), **_prop)
+                
+        if not control._element: 
+            control.Refind(maxSearchSeconds = time_out)
+            
+        handle = control.Handle               
+        if handle in cls.__handles:
+            cls.__handles.pop(cls.__handles.index(handle))
+        cls.__handles.append(handle)
+                
+        return control
+
+class WinContext(WinElement):
+    
+    glob = {}
+      
+    @classmethod
+    def SetVar(cls, var, value):
         ''' set static value
-        :param name: glob parameter name
+        :param var: glob parameter name
         :param value: parameter value
         '''
-        cls.__glob.update({name:value})
+        cls.glob.update({var:value})
                 
     @classmethod
-    def GetVar(cls, name):
-        return cls.__glob.get(name)
+    def GetVar(cls, var):
+        return cls.glob.get(var)     
     
+    @classmethod
+    def DyPropertyData(cls,var, attr):
+        try:
+            if attr in ('ClassName', 'ControlTypeName', 'Name', 'AutomationId'):
+                result = getattr(cls._element(), attr)
+            else:
+                result = None
+        except:
+            result = None
+        cls.SetVar(var, result)
         
-    #Verify ----
+    @classmethod
+    def DyTextData(cls, var, regx, index = 0):
+        ''' set dynamic value from the string data of response  
+        @param var: glob parameter name
+        @param regx: re._pattern_type
+            e.g.
+            DyStrData("a",re.compile('123'))
+            
+            CurrentValue
+        '''
+                
+        if not isinstance(regx, re._pattern_type):
+            raise Exception("DyTextData need the arg which have compiled the regular expression.")
+        
+        text = WinActions.CurrentValue()
+        if text == False:
+            result = ""
+        else:    
+            values = regx.findall(text)            
+            result = ""
+            if len(values)>index:
+                result = values[index]
+                    
+        cls.glob.update({var:result})
+           
+    
+class WinWait(WinElement):    
+    
+    @classmethod
+    def TimeSleep(cls, seconds):
+        time.sleep(seconds)
+        
+    @classmethod
+    def WaitForExist(cls, timeout):
+        return uiautomation.WaitForExist(cls._element(), timeout)
+        
+    @classmethod
+    def WaitForDisappear(cls, timeout):
+        return uiautomation.WaitForDisappear(cls._element(), timeout)
+        
+class WinVerify(WinElement):
+    
+    @classmethod
+    def VerifyVar(cls, name, expect_value):
+        return WinContext.GetVar(name) == expect_value
+    
+    @classmethod
+    def VerifyProperty(cls, attr, expect_value):
+        try:
+            if attr in ('ClassName', 'ControlTypeName', 'Name', 'AutomationId'):
+                result = getattr(cls._element(), attr) == expect_value
+            else:
+                result = False
+        except:
+            result = False
+        finally:
+            return result
+    
     @classmethod
     def VerifyKeyboardFocusable(cls):
         try:
@@ -62,8 +187,11 @@ class WinUI(object):
     
     @classmethod
     def VerifyElemKeyboardFocus(cls):
-        if cls.elm: 
-            return cls.elm.getProp("HasKeyboardFocus")
+        try:
+            result = cls._element().HasKeyboardFocus()                          
+        except:
+            result = False
+        return result
         
     @classmethod
     def VerifyElemEnabled(cls):
@@ -72,52 +200,7 @@ class WinUI(object):
         except:
             result = False
         return result
-    
-    @classmethod
-    def VerifyClassName(cls, name):
-        try:
-            result = cls._element().ClassName == name
-        except:
-            result = False
-        return result
-        
-    @classmethod
-    def VerifyControlType(cls, contype):
-        try:
-            result = cls._element().ControlType == contype
-        except:
-            result = False
-        return result
-    
-    @classmethod
-    def VerifyAutomationId(cls, aid):
-        try:
-            result = cls._element().AutomationId == aid
-        except:
-            result = False
-        return result    
-    
-    @classmethod
-    def VerifyLocalizedControlType(cls, lct):
-        try:
-            result = cls._element().LocalizedControlType == lct
-        except:
-            result = False
-        return result
-        
-    @classmethod
-    def VerifyName(cls, name):
-        try:
-            result = cls._element().Name == name
-        except:
-            result = False
-        return result
             
-    @classmethod
-    def BoundingRectangle(cls):
-        if cls.elm: 
-            return cls.elm.getProp("BoundingRectangle")    
-    
     @classmethod
     def VerifyExist(cls):
         try:
@@ -134,17 +217,94 @@ class WinUI(object):
             result = True
         return result
     
-    
-    #Actions ---        
-    @classmethod
-    def TimeSleep(cls,seconds):
-        time.sleep(seconds)
-    
+            
+class WinActions(WinElement):
     @classmethod
     def StartApplication(cls, app_path):
         if not os.path.exists(app_path):
             raise Exception('Not found "%s"' %app_path)
         subprocess.Popen([app_path])
+    
+    ### WindowPattern
+    @classmethod
+    def SetWinStat(cls,value):       
+        
+        stat = ["Normal", "Max", "Min"]
+        if not value.capitalize() in stat:
+            raise ValueError("SetWinStat need [Normal,Max,Min].")
+        
+        elm = cls._element()
+        try:
+            if elm.IsWindowPatternAvailable():
+                getattr(elm, value.capitalize())()
+            else:
+                return False
+        except:
+            return False
+                   
+    @classmethod
+    def SwitchToWindow(cls):
+        ''' activate and Move cursor to this window '''
+        elm = cls._element()
+        try:
+            if elm.IsWindowPatternAvailable():
+                elm.SwitchToThisWindow()
+            else:
+                return False
+        except:
+            return False
+    
+    @classmethod
+    def SetTopmost(cls, is_top_most = False):
+        ''' 置顶    '''
+        elm = cls._element()
+        try:
+            if elm.IsWindowPatternAvailable():
+                elm.SetTopmost(is_top_most)
+            else:
+                return False
+        except:
+            return False
+    
+    @classmethod
+    def ActivateWindow(cls):
+        elm = cls._element()
+        try:
+            if elm.IsWindowPatternAvailable():
+                elm.Activate()
+            else:
+                return False
+        except:
+            return False
+    
+    @classmethod
+    def MoveWindowPos(cls,x=-1, y=-1):
+        ''' defalut move window to center
+        e.g.
+            x = 400, y = 400
+        '''
+        elm = cls._element()
+        
+        if x == -1 or y == -1:
+            left, top, right, bottom = elm.BoundingRectangle
+            width, height = right - left, bottom - top
+            screenWidth, screenHeight = uiautomation.Win32API.GetScreenSize()
+            x, y = (screenWidth-width)//2, (screenHeight-height)//2
+            if x < 0: x = 0
+            if y < 0: y = 0           
+            
+        return uiautomation.Win32API.SetWindowPos(elm.Handle, uiautomation.SWP.HWND_TOP, x, y, 0, 0, uiautomation.SWP.SWP_NOSIZE)
+    
+    @classmethod
+    def CloseWin(cls):
+        elm = cls._element()
+        try:
+            if elm.IsWindowPatternAvailable():
+                elm.Close()
+            else:
+                return False
+        except:
+            return False
         
     ### InvokePattern
     @classmethod
@@ -172,6 +332,18 @@ class WinUI(object):
         except:
             return False
         
+    @classmethod
+    def CurrentValue(cls):
+        ''' Set text value, just like type in some string '''
+        elm = cls._element()  
+        try:
+            if elm.IsValuePatternAvailable():            
+                return elm.CurrentValue()
+            else:
+                return False
+        except:
+            return False
+        
     ### ScrollPattern
     @classmethod
     def ScrollTo(cls,horizontalPercent=-1,verticalPercent=-1):
@@ -187,37 +359,8 @@ class WinUI(object):
             else:
                 return False
         except:
-            return False
-        
-        
-    ### WindowPattern
-    @classmethod
-    def SetWinStat(cls,value):       
-        
-        stat = ["Normal", "Max", "Min"]
-        if not value.capitalize() in stat:
-            raise ValueError("SetWinStat need [Normal,Max,Min].")
-        
-        elm = cls._element()
-        try:
-            if elm.IsWindowPatternAvailable():
-                getattr(elm, value.capitalize())()
-            else:
-                return False
-        except:
-            return False
-                   
+            return False       
     
-    @classmethod
-    def CloseWin(cls):
-        elm = cls._element()
-        try:
-            if elm.IsWindowPatternAvailable():
-                elm.Close()
-            else:
-                return False
-        except:
-            return False
     
     ### TogglePattern        
     @classmethod
@@ -370,102 +513,34 @@ class WinUI(object):
             elm.SendKeys(text)
         except:
             return False
-    
-    ####  Elemeent
-    @classmethod
-    def _element(cls):
-        _prop = cls.prop.copy()
-        control_str = _prop.pop("ControlType", "Control")
-        if control_str in uiautomation.ControlTypeNameDict.values():
-            control = getattr(uiautomation, "control_str")
-        else:
-            control = uiautomation.Control
-        
-        uiautomation.TIME_OUT_SECOND = cls.timeout
-        _control = control(foundIndex = cls.index, **_prop)
-        cls.index = 1
-        return _control.Element
-
 #     
-def usage_for_mfc_app():    
-    window_title1 = u"Installer Language"
-    window_title2 = u"Notepad++ v5.7 安装" 
-    WPFElement.StartApplication(r"F:\BaiduYunDownload\pcinstall\npp.5.7.Installer.exe")
+def usage_for_notepad():
+    WinActions.StartApplication(r"C:\Windows\System32\notepad.exe")
+    WinWait.TimeSleep(2)
     
-    # Use UISpy or others to spy the WPF UI.    
-    handle1 = WPFElement.SwitchToWindow(window_title1)
-    print "handle1 ->", handle1  
+    WinActions.SetControl(ControlType = "WindowControl", ClassName = 'Notepad', Depth = 1)
+    WinActions.SwitchToWindow()
+    WinActions.ActivateWindow()
+    WinActions.MoveWindowPos(400, 400)    
+    WinVerify.VerifyProperty("Name", u"无标题 - 记 事本")    
+    WinWait.TimeSleep(2)
     
-    dpos = (400,400)
-    WPFElement.identifications = {"AutomationId" : u"TitleBar"}
-    WPFElement.MouseDragTo(*dpos)
-    time.sleep(1)
+    WinActions.SwitchToCurrentControl()    
+    WinActions.SetControl(ControlType = "EditControl", ClassName = "Edit")
+    WinContext.DyPropertyData("class_name", "ClassName")
+    WinVerify.VerifyVar("class_name", "Edit")
+    WinActions.SetValue('Hello')
+    WinActions.SendKeys('{Ctrl}{End}{Enter}World')
+    WinContext.DyTextData("text", re.compile('.*'))
+    WinVerify.VerifyVar("text", "Helloss\r\nWorlda")
+    WinWait.TimeSleep(2)
     
-    WPFElement.identifications = {"Name" : u"English"}
-    WPFElement.SelectItem()
-    
-    WPFElement.identifications = {"Name" : u"Chinese (Simplified)"}
-    WPFElement.SelectItem()
-    
-    WPFElement.identifications = {"Name" : u"OK"}  
-    WPFElement.ClickWin()  
-    print "---"
-    
-    handle2 = WPFElement.SwitchToWindow(window_title2)
-    print "handle2 ->", handle2
-    WPFElement.identifications = {"Name" : u"下一步(N) >"}
-    WPFElement.ClickWin()
-    
-    WPFElement.identifications = {"Name" : u"我接受(I)"}
-    WPFElement.ClickWin()
-    
-    WPFElement.identifications = {"AutomationId" : "1019"}
-    WPFElement.TypeInWin(ur'd:\hello input你好')
-    
-    WPFElement.identifications = {"Name" : u"下一步(N) >"}
-    WPFElement.ClickWin()
-    
-    WPFElement.identifications = {"Name" : u"取消(C)"}
-    WPFElement.ClickWin()
-    print "---"
-    
-    WPFElement.SwitchToDefaultWindow()
-    WPFElement.identifications = {"Name" :  u"是(Y)"}
-#     WPFElement.ClickWin()
-    WPFElement.MouseClick()
-    
-def usage_for_wpf_app():
-    dut = r"D:\auto\buffer\AiSchool\AiTeacherCenter\AiTeacherCenter\AiTeacher.exe"
-    WPFElement.StartApplication(dut)
-    
-    #(identifications,prop,index,timeout)=({},None,0,10)
-    WPFElement.identifications = {"AutomationId" : "txtUserName"}
-    print "IsPassword: %s" %WPFElement.IsPassword()
-    print "setting username value: Hello MUIA."
-    WPFElement.TypeInWin("Hello MUIA")                
-    print "---"
-    
-    WPFElement.identifications = {"AutomationId" : "PwdUser"}
-    print "IsPassword: %s" %WPFElement.IsPassword()
-    print "setting username value: 123456."
-    WPFElement.TypeInWin("123456")                
-    print "---"
+    WinActions.SwitchToDefaultControl()
+    WinActions.MoveWindowPos()
+    WinWait.TimeSleep(2)
+    WinActions.CloseWin()
         
-    WPFElement.identifications = {"AutomationId" : "ckbIsSavePwd"}
-    print "Name: %s" %WPFElement.Name()
-    WPFElement.SwitchToggle()                    
-    print "---"
-    
-    WPFElement.identifications = {"AutomationId" : "BtnLogin"}
-    print "Name: %s" %WPFElement.Name()
-    print "IsKeyboardFocusable: %s" %WPFElement.IsKeyboardFocusable()        
-    WPFElement.ClickWin()
         
 if __name__ == "__main__":    
-    #ipy.exe driver.py
-    ##### notepad++ installation example
-    usage_for_mfc_app()
-  
-    #### AiSchool login example
-#     usage_for_wpf_app()
+    usage_for_notepad()
     
