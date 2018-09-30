@@ -1,0 +1,81 @@
+# yaml测试用例，模型示例:
+- project:
+    name: xxx Window
+    module: xxx模块-功能测试
+    
+- case:
+    # id 必填
+    id: ATP-1
+    # desc 必填
+    desc: 测试用例-模板格式的设计-模板（全字段）
+    
+    # responsible 选填
+    responsible: rockfeng0
+    
+    # tester 选填
+    tester: rockfeng0
+    
+    # 定义正则表达式, 定义的字符串不会解析,选填
+    glob_regx:
+        rex_open_file: '(文件名.*)'
+        rex_all: '.*'
+    
+    # 定义变量， 效果同 SetVar(name, value),选填
+    glob_var:
+        program: C:\Windows\System32\notepad.exe
+        
+    # pre_command 选填
+    pre_command:
+        - ${StartApplication($program)}
+        
+    # steps 必填
+    steps:      
+    
+        # 在windows中，定位元素
+        - windriver:
+            ControlType: WindowControl
+            ClassName: Notepad
+            Depth: 1
+            index: 1
+            timeout: 10
+            action: ${ActivateWindow()}
+            
+        - windriver:
+            action: ${MoveWindowPos(400, 400)}
+            
+        - windriver:
+            action: ${VerifyProperty(Name, 无标题 - 记 事本)}
+        
+        - windriver:
+            action: ${TimeSleep(2)} 
+            
+        - windriver:
+            action: ${SwitchToCurrentControl()}
+        
+        - windriver:
+            action: ${SetSearchProperty(ControlType=EditControl, ClassName=Edit)}
+            
+        - windriver:
+            action: ${DyPropertyData(class_name, ClassName)}
+        
+        - windriver:
+            action: ${VerifyVar(class_name, Edit)} 
+        
+        - windriver:
+            action: ${SetValue(Hello)}
+                
+        - windriver:          
+            action: ${SendKeys({Ctrl}{End}{Enter}World)} 
+            
+        - windriver:
+            action: ${DyTextData(text, $rex_all)}
+        
+        - windriver:
+            action: ${VerifyVar(text, Helloss\r\nWorlda)}
+                           
+    # post_command 选填
+    post_command:
+        - ${TimeSleep(2)} 
+        
+            
+    

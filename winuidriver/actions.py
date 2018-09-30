@@ -43,7 +43,7 @@ class WinElement(object):
                 Depth: integer, exact depth from searchFromControl, if set, searchDepth will be set to Depth too
         '''
         cls.__elm = None
-        cls.__prop = {"index":1, "timeout":10}
+        cls.__prop = {"index":1, "timeout":10}        
         cls.__prop.update(kwargs)
     
     @classmethod
@@ -65,7 +65,7 @@ class WinElement(object):
         if cls.__elm:
             return cls.__elm
         
-        _prop = cls.__prop.copy()
+        _prop = cls.__prop.copy()        
         control_type = _prop.pop("ControlType", "Control")
         time_out = _prop.pop("timeout")
         
