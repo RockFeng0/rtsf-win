@@ -19,7 +19,7 @@ Provide a function for the automation test
 '''
 
 
-import unittest, os
+import unittest
 from rtsf.p_executer import TestRunner
 from rtsf.p_applog import logger
 from winuidriver.driver import Driver
@@ -37,8 +37,8 @@ class TestDriver(unittest.TestCase):
         
         
 if __name__ == "__main__":
-#     logger.setup_logger("debug")
-#     unittest.main()
+    logger.setup_logger("debug")
+    unittest.main()
     runner = TestRunner(runner = Driver).run(r'data\test_case.yaml')
     html_report = runner.gen_html_report()
     print(html_report)

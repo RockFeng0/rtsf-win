@@ -24,11 +24,8 @@ import uiautomation
 
 class WinElement(object):
     
-    __prop, __elm = {}, None
-    
-    __root = uiautomation.GetRootControl()
-    __handles = [(__root.Handle, __root.Name)]
-                    
+    __prop, __control, __handles = {}, None, []
+                        
     @classmethod    
     def SetSearchProperty(cls,**kwargs):
         '''
@@ -42,7 +39,7 @@ class WinElement(object):
                 RegexName: str or unicode, supports regex
                 Depth: integer, exact depth from searchFromControl, if set, searchDepth will be set to Depth too
         '''
-        cls.__elm = None
+        cls.__control = None
         cls.__prop = {"index":1, "timeout":10}        
         cls.__prop.update(kwargs)
     
@@ -54,34 +51,35 @@ class WinElement(object):
     def SwitchToCurrentControl(cls):
         ''' switch to the child control '''        
         cls.__root = uiautomation.ControlFromHandle(cls.__handles[-1][0])        
-        
+            
     @classmethod
     def SwitchToRootControl(cls):
-        ''' switch to root control '''
-        cls.__root = uiautomation.GetRootControl()
+        ''' switch to root control and init handles '''
+        root = cls.__root = uiautomation.GetRootControl()
+        cls.__handles = [(root.Handle, root.Name)]
     
     @classmethod
     def _element(cls):
-        if cls.__elm:
-            return cls.__elm
-        
+        if cls.__control:
+            return cls.__control
+                
         _prop = cls.__prop.copy()        
         control_type = _prop.pop("ControlType", "Control")
         time_out = _prop.pop("timeout")
-        
+                
         if control_type in uiautomation.ControlTypeNameDict.values():        
-            cls.__elm = control = getattr(cls.__root, control_type)(foundIndex = _prop.pop("index"), **_prop)
+            cls.__control = con = getattr(cls.__root, control_type)(foundIndex = _prop.pop("index"), **_prop)
         else:
-            cls.__elm = control = cls.__root.Control(foundIndex = _prop.pop("index"), **_prop)
+            cls.__control = con = cls.__root.Control(foundIndex = _prop.pop("index"), **_prop)
         
-        if not control._element: 
-            control.Refind(maxSearchSeconds = time_out)
+        if not con._element: 
+            con.Refind(maxSearchSeconds = time_out)
             
-        handle = (control.Handle, control.Name)
+        handle = (con.Handle, con.Name)
         if handle in cls.__handles:
             cls.__handles.pop(cls.__handles.index(handle))
-        cls.__handles.append(handle)                        
-        return control
+        cls.__handles.append(handle)        
+        return con
 
 class WinContext(WinElement):
     

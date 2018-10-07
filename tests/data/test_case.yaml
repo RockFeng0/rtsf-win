@@ -27,6 +27,7 @@
     # pre_command 选填
     pre_command:
         - ${StartApplication($program)}
+        - ${TimeSleep(2)} 
         
     # steps 必填
     steps:      
@@ -72,10 +73,38 @@
         
         - windriver:
             action: ${VerifyVar(text, Helloss\r\nWorlda)}
+
+        - windriver:
+            action: ${SetVar(text, nihao)}
+            
+        - windriver:
+            action: ${GetVar(text)}
+            
+        - windriver:
+            action: ${SetSearchProperty(a=2,b=3)}
+            
+        - windriver:
+            action: ${GetSearchProperty()}
                            
     # post_command 选填
     post_command:
         - ${TimeSleep(2)} 
         
+- case:
+    id: ATP-2
+    desc: simple test
+    steps: 
+        - windriver:
+            action: ${SetVar(text1, hello)}
             
-    
+        - windriver:
+            action: ${GetVar(text)}
+            
+        - windriver:
+            action: ${GetVar(text1)}
+            
+        - windriver:
+            action: ${SetSearchProperty(c=4,d=5)}
+            
+        - windriver:
+            action: ${GetSearchProperty()}

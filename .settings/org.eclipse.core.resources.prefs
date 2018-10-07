@@ -1,0 +1,5 @@
+eclipse.preferences.version=1
+encoding//tests/test_actions.py=utf-8
+encoding//tests/test_driver.py=utf-8
+encoding//winuidriver/actions.py=utf-8
+encoding//winuidriver/driver.py=utf-8
