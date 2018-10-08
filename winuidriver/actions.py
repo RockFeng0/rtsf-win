@@ -71,7 +71,7 @@ class WinElement(object):
         control_type = _prop.pop("ControlType", "Control")
         time_out = _prop.pop("timeout")
                 
-        _, root = cls.__handles[0]                    
+        _, root = cls.__handles[0]                            
         if control_type in uiautomation.ControlTypeNameDict.values():        
             cls.__control = con = getattr(root, control_type)(foundIndex = _prop.pop("index"), **_prop)
         else:
@@ -134,8 +134,7 @@ class WinContext(object):
             values = regx.findall(text)            
             result = ""
             if len(values)>index:
-                result = values[index]
-                    
+                result = values[index]        
         cls.glob.update({var:result})
            
     
@@ -160,10 +159,10 @@ class WinVerify(object):
         return WinContext.GetVar(name) == expect_value
     
     @classmethod
-    def VerifyProperty(cls, attr, expect_value):
+    def VerifyProperty(cls, attr, expect_value):        
         try:
-            if attr in ('ClassName', 'ControlTypeName', 'Name', 'AutomationId'):
-                result = getattr(WinElement._element(), attr) == expect_value
+            if attr in ('ClassName', 'ControlTypeName', 'Name', 'AutomationId'):                
+                result = getattr(WinElement._element(), attr) == expect_value                
             else:
                 result = False
         except:

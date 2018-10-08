@@ -51,10 +51,6 @@ class Driver(Runner):
         case_name = testcase_dict["name"]                 
         tracer.start(self.proj_info["module"], case_name, testcase_dict.get("responsible","Administrator"), testcase_dict.get("tester","Administrator"))        
         tracer.section(case_name)
-         
-        ###  to change tracer
-        tracer.start(self.proj_info["module"], case_name, testcase_dict.get("responsible","Administrator"), testcase_dict.get("tester","Administrator"))        
-        tracer.section(case_name)
         
         try:
             tracer.normal("**** bind glob variables")                

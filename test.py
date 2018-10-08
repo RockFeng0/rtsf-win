@@ -12,6 +12,13 @@ def usage():
     edit = notepadWindow.EditControl()
     edit.SetValue('Hello')
     edit.SendKeys('{Ctrl}{End}{Enter}World')
+    notepadWindow.Close()
+    notepadWindow.ButtonControl(Name=u'保存(S)').Invoke()
+    notepadWindow.EditControl(Name="文件名:",AutomationId="1001").SetValue(r'c:\test dir')
+    notepadWindow.ButtonControl(Name="取消").Invoke()
+    notepadWindow.Close()
+    notepadWindow.ButtonControl(Name=u'不保存(N)').Invoke()
+    
 
 
 # __requires__ = 'uiautomation==1.1.10'
@@ -21,27 +28,8 @@ def usage():
 # import pkg_resources
 # pkg_resources.run_script("uiautomation==1.1.10", "automation.py")
 
-
-class T:
-    #__t=123
-    
-    @classmethod
-    def set(cls,v):
-        cls.__t = v
-        
-    @classmethod
-    def get(cls):
-        return cls.__t
-    
-    
-class Y(T):
-    
-    @classmethod
-    def test(cls):
-        print(cls.get())
         
 if __name__ == "__main__":
-    T.set(456)
-    Y.test()
+    usage()
         
     

@@ -18,14 +18,17 @@
     # 定义正则表达式, 定义的字符串不会解析,选填
     glob_regx:
         rex_open_file: '(文件名.*)'
-        rex_all: '.*'
+        rex_hello: 'Hello'
     
     # 定义变量， 效果同 SetVar(name, value),选填
     glob_var:
         program: C:\Windows\System32\notepad.exe
-        title: 无标题 - 记 事本
+        title: 无标题 - 记事本
         keys: '{Ctrl}{End}{Enter}World'
-        verify_text: 'Hello\r'
+        text_hello: 'Hello'
+        text_save: '保存(S)'
+        text_file_path: 'c:\some test dir'
+        text_unsave: '不保存(N)'
         
     # pre_command 选填
     pre_command:
@@ -71,17 +74,14 @@
                 
         - windriver:          
             action: ${SendKeys($keys)}
-            
-        - windriver:
-            action: ${DyTextData(text, $rex_all)}
-        
-        - windriver:
-            action: ${VerifyVar(text, $verify_text)}
-                               
                            
     # post_command 选填
     post_command:
-        - ${TimeSleep(2)} 
+        - ${DyTextData(text, $rex_hello)}
+    
+    # verify 选填
+    verify:
+        - ${VerifyVar(text, $text_hello)} 
         
 - case:
     id: ATP-2
@@ -97,24 +97,49 @@
             action: ${MoveWindowPos()}
         
         - windriver:
-            action: ${TimeSleep(2)}     
-        WinWait.TimeSleep(2)
-        WinActions.CloseWin()
+            action: ${TimeSleep(2)}
+            
+        - windriver:
+            action: ${CloseWin()}
+            
+        - windriver:
+            action: ${SwitchToCurrentControl()}
         
-        WinElement.SwitchToCurrentControl()
-        WinElement.SetSearchProperty(Name = u'保存(S)', ClassName = "CCPushButton")
-        WinActions.Click(simulateMove = True)
-        WinElement.SetSearchProperty(ControlType = "EditControl", Name = u'文件名:',ClassName="Edit", AutomationId = "1001")
-        WinActions.SetValue(r'c:\some test dir')
-        WinElement.SetSearchProperty(ControlType = "ButtonControl", Name = u'取消',ClassName="Button")
-        WinActions.Invoke()
+        - windriver:
+            action: ${SetSearchProperty(Name=$text_save, ClassName=CCPushButton)}
+            
+        - windriver:
+            action: ${Click(simulateMove=True)}         
+        - windriver:
+            ControlType: EditControl
+            ClassName: Edit
+            Name: '文件名:'
+            AutomationId: '1001'
+            action: ${SetValue($text_file_path)}
         
-        WinElement.SwitchToRootControl()
-        WinElement.SetSearchProperty(ControlType = "WindowControl", ClassName = 'Notepad', Depth = 1)    
-        WinActions.CloseWin()
-        WinWait.TimeSleep(2)
-        WinElement.SetSearchProperty(ControlType = "ButtonControl", Name = u'不保存(N)', ClassName = "CCPushButton")
-        WinActions.Invoke()
+        - windriver:
+            action: ${SetSearchProperty(ControlType=ButtonControl, Name=取消,ClassName=Button)}
+        
+        - windriver:
+            action: ${Invoke()}
+        
+        - windriver:
+            action: ${SwitchToRootControl()}
+        
+        - windriver:
+            action: ${SetSearchProperty(ControlType=WindowControl, ClassName=Notepad, Depth = 1)}
+        
+        - windriver:
+            action: ${CloseWin()}
+        
+        - windriver:
+            action: ${TimeSleep(2)}
+        
+        - windriver:
+            action: ${SetSearchProperty(ControlType=ButtonControl,Name=$text_unsave, ClassName=CCPushButton)}
+        
+        - windriver:
+            action: ${Invoke()}
         
         
             

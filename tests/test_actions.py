@@ -35,7 +35,7 @@ class TestActions(unittest.TestCase):
         WinElement.SetSearchProperty(ControlType = "WindowControl", ClassName = 'Notepad', Depth = 1)
         WinActions.ActivateWindow()
         WinActions.MoveWindowPos(400, 400)    
-        WinVerify.VerifyProperty("Name", u"无标题 - 记 事本")    
+        WinVerify.VerifyProperty("Name", u"无标题 - 记事本")    
         WinWait.TimeSleep(2)
         
         WinElement.SwitchToCurrentControl()
