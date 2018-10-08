@@ -21,6 +21,7 @@ Provide a function for the automation test
 
 import os,time,subprocess,re
 import uiautomation
+from builtins import classmethod
 
 class WinElement(object):
     
@@ -39,9 +40,11 @@ class WinElement(object):
                 RegexName: str or unicode, supports regex
                 Depth: integer, exact depth from searchFromControl, if set, searchDepth will be set to Depth too
         '''
+        
         cls.__control = None
-        cls.__prop = {"index":1, "timeout":10}        
-        cls.__prop.update(kwargs)
+        _ = [cls.__prop.pop(prop) for prop in ('ControlType',"ClassName","AutomationId","Name","SubName","RegexName","Depth") if cls.__prop.get(prop)]
+        cls.__prop.update(kwargs)        
+        cls.__prop.update({"index":1, "timeout":10})
     
     @classmethod
     def GetSearchProperty(cls):
@@ -49,15 +52,16 @@ class WinElement(object):
         
     @classmethod
     def SwitchToCurrentControl(cls):
-        ''' switch to the child control '''        
-        cls.__root = uiautomation.ControlFromHandle(cls.__handles[-1][0])        
-            
+        ''' switch to the child control '''
+                
+        cls.__handles[0] = (cls.__handles[-1]["Handle"], uiautomation.ControlFromHandle(cls.__handles[-1]["Handle"]))
+        
     @classmethod
     def SwitchToRootControl(cls):
         ''' switch to root control and init handles '''
-        root = cls.__root = uiautomation.GetRootControl()
-        cls.__handles = [(root.Handle, root.Name)]
-    
+        __root = uiautomation.GetRootControl()        
+        WinElement.__handles = [(__root.Handle, __root), {"Handle":__root.Handle, "Name":__root.Name}]        
+        
     @classmethod
     def _element(cls):
         if cls.__control:
@@ -67,21 +71,22 @@ class WinElement(object):
         control_type = _prop.pop("ControlType", "Control")
         time_out = _prop.pop("timeout")
                 
+        _, root = cls.__handles[0]                    
         if control_type in uiautomation.ControlTypeNameDict.values():        
-            cls.__control = con = getattr(cls.__root, control_type)(foundIndex = _prop.pop("index"), **_prop)
+            cls.__control = con = getattr(root, control_type)(foundIndex = _prop.pop("index"), **_prop)
         else:
-            cls.__control = con = cls.__root.Control(foundIndex = _prop.pop("index"), **_prop)
+            cls.__control = con = root.Control(foundIndex = _prop.pop("index"), **_prop)
         
         if not con._element: 
             con.Refind(maxSearchSeconds = time_out)
             
-        handle = (con.Handle, con.Name)
+        handle = {"Handle":con.Handle, "Name":con.Name}
         if handle in cls.__handles:
             cls.__handles.pop(cls.__handles.index(handle))
         cls.__handles.append(handle)        
         return con
 
-class WinContext(WinElement):
+class WinContext(object):
     
     glob = {}
       
@@ -101,7 +106,7 @@ class WinContext(WinElement):
     def DyPropertyData(cls,var, attr):
         try:
             if attr in ('ClassName', 'ControlTypeName', 'Name', 'AutomationId'):
-                result = getattr(cls._element(), attr)
+                result = getattr(WinElement._element(), attr)
             else:
                 result = None
         except:
@@ -134,7 +139,7 @@ class WinContext(WinElement):
         cls.glob.update({var:result})
            
     
-class WinWait(WinElement):    
+class WinWait(object):    
     
     @classmethod
     def TimeSleep(cls, seconds):
@@ -142,13 +147,13 @@ class WinWait(WinElement):
         
     @classmethod
     def WaitForExist(cls, timeout):
-        return uiautomation.WaitForExist(cls._element(), timeout)
+        return uiautomation.WaitForExist(WinElement._element(), timeout)
         
     @classmethod
     def WaitForDisappear(cls, timeout):
-        return uiautomation.WaitForDisappear(cls._element(), timeout)
+        return uiautomation.WaitForDisappear(WinElement._element(), timeout)
         
-class WinVerify(WinElement):
+class WinVerify(object):
     
     @classmethod
     def VerifyVar(cls, name, expect_value):
@@ -158,7 +163,7 @@ class WinVerify(WinElement):
     def VerifyProperty(cls, attr, expect_value):
         try:
             if attr in ('ClassName', 'ControlTypeName', 'Name', 'AutomationId'):
-                result = getattr(cls._element(), attr) == expect_value
+                result = getattr(WinElement._element(), attr) == expect_value
             else:
                 result = False
         except:
@@ -169,7 +174,7 @@ class WinVerify(WinElement):
     @classmethod
     def VerifyKeyboardFocusable(cls):
         try:
-            result = cls._element().IsKeyboardFocusable()
+            result = WinElement._element().IsKeyboardFocusable()
         except:
             result = False
         return result
@@ -177,7 +182,7 @@ class WinVerify(WinElement):
     @classmethod
     def VerifyElemKeyboardFocus(cls):
         try:
-            result = cls._element().HasKeyboardFocus()                          
+            result = WinElement._element().HasKeyboardFocus()                          
         except:
             result = False
         return result
@@ -185,7 +190,7 @@ class WinVerify(WinElement):
     @classmethod
     def VerifyElemEnabled(cls):
         try:
-            result = cls._element().IsEnabled()                          
+            result = WinElement._element().IsEnabled()                          
         except:
             result = False
         return result
@@ -193,7 +198,7 @@ class WinVerify(WinElement):
     @classmethod
     def VerifyExist(cls):
         try:
-            result = True if cls._element() else False
+            result = True if WinElement._element() else False
         except:
             result = False
         return result
@@ -201,13 +206,13 @@ class WinVerify(WinElement):
     @classmethod
     def VerifyNotExist(cls):
         try:
-            result = False if cls._element() else True
+            result = False if WinElement._element() else True
         except:
             result = True
         return result
     
             
-class WinActions(WinElement):
+class WinActions(object):
     @classmethod
     def StartApplication(cls, app_path):
         if not os.path.exists(app_path):
@@ -222,7 +227,7 @@ class WinActions(WinElement):
         if not value.capitalize() in stat:
             raise ValueError("SetWinStat need [Normal,Max,Min].")
         
-        elm = cls._element()        
+        elm = WinElement._element()        
         if elm.IsWindowPatternAvailable():
             getattr(elm, value.capitalize())()
         else:
@@ -231,7 +236,7 @@ class WinActions(WinElement):
     @classmethod
     def ActivateWindow(cls):
         ''' activate and Move cursor to this window '''
-        elm = cls._element()        
+        elm = WinElement._element()        
         if elm.IsWindowPatternAvailable():
             elm.SwitchToThisWindow()
         else:
@@ -240,7 +245,7 @@ class WinActions(WinElement):
     @classmethod
     def SetTopmost(cls, is_top_most = False):
         ''' 置顶    '''
-        elm = cls._element()        
+        elm = WinElement._element()        
         if elm.IsWindowPatternAvailable():
             elm.SetTopmost(is_top_most)
         else:
@@ -252,7 +257,7 @@ class WinActions(WinElement):
         e.g.
             x = 400, y = 400
         '''
-        elm = cls._element()        
+        elm = WinElement._element()        
         if x == -1 or y == -1:
             left, top, right, bottom = elm.BoundingRectangle
             width, height = right - left, bottom - top
@@ -265,7 +270,7 @@ class WinActions(WinElement):
     
     @classmethod
     def CloseWin(cls):
-        elm = cls._element()        
+        elm = WinElement._element()        
         if elm.IsWindowPatternAvailable():
             elm.Close()
         else:
@@ -275,7 +280,7 @@ class WinActions(WinElement):
     @classmethod
     def Invoke(cls):
         ''' invoke element, just like click the element '''
-        elm = cls._element()
+        elm = WinElement._element()
         if elm.IsInvokePatternAvailable():            
             elm.Invoke()
         else:
@@ -285,7 +290,7 @@ class WinActions(WinElement):
     @classmethod
     def SetValue(cls,value):
         ''' Set text value, just like type in some string '''
-        elm = cls._element()
+        elm = WinElement._element()
         if elm.IsValuePatternAvailable():            
             elm.SetValue(value)
         else:
@@ -294,7 +299,7 @@ class WinActions(WinElement):
     @classmethod
     def CurrentValue(cls):
         ''' Set text value, just like type in some string '''
-        elm = cls._element()
+        elm = WinElement._element()
         if elm.IsValuePatternAvailable():            
             return elm.CurrentValue()
         else:
@@ -308,7 +313,7 @@ class WinActions(WinElement):
         :param verticalPercent=-1 表示横向滚动条; horizontalPercent=100，表示向右移动100%,即移动到最右; horizontalPercent=0，表示左侧       
         '''
         
-        elm = cls._element()        
+        elm = WinElement._element()        
         if elm.IsScrollPatternAvailable():
             elm.SetScrollPercent(horizontalPercent, verticalPercent)
         else:
@@ -324,7 +329,7 @@ class WinActions(WinElement):
             #    On = 1
             #    Off = 0
         '''
-        elm = cls._element()        
+        elm = WinElement._element()        
         if elm.IsTogglePatternAvailable() and elm.CurrentToggleState == uiautomation.ToggleState.Off:
             elm.Toggle()
         else:
@@ -332,7 +337,7 @@ class WinActions(WinElement):
                 
     @classmethod
     def CheckOff(cls):
-        elm = cls._element()        
+        elm = WinElement._element()        
         if elm.IsTogglePatternAvailable() and elm.CurrentToggleState == uiautomation.ToggleState.On:
             elm.Toggle()
         else:
@@ -349,7 +354,7 @@ class WinActions(WinElement):
             #    Expanded = 1
             #    Collapsed = 0 
         '''
-        elm = cls._element()
+        elm = WinElement._element()
         if elm.IsExpandCollapsePatternAvailable() and elm.CurrentExpandCollapseState == uiautomation.ExpandCollapseState.Collapsed:
             elm.Expand()
         else:
@@ -357,7 +362,7 @@ class WinActions(WinElement):
     
     @classmethod
     def ExpandOff(cls):
-        elm = cls._element()
+        elm = WinElement._element()
         if elm.IsExpandCollapsePatternAvailable() and elm.CurrentExpandCollapseState == uiautomation.ExpandCollapseState.Expanded:
             elm.Collapse()
         else:
@@ -370,7 +375,7 @@ class WinActions(WinElement):
         :ComboBox_ListBox 组合框 或者 列表框，展开后，选择条目
         :TabItem 选项卡项  ,选择条目
         '''
-        elm = cls._element()
+        elm = WinElement._element()
         if elm.IsSelectionItemPatternAvailable():
             elm.Select()
         else:
@@ -385,7 +390,7 @@ class WinActions(WinElement):
         Click(-10, -10): click right-10, bottom-10
         simulateMove: bool, if True, first move cursor to control smoothly
         """
-        elm = cls._element()
+        elm = WinElement._element()
         try:
             elm.Click(ratioX = ratioX, ratioY = ratioY, simulateMove = simulateMove)
         except:
@@ -399,7 +404,7 @@ class WinActions(WinElement):
         DoubleClick(-10, -10): click right-10, bottom-10
         DoubleClick: bool, if True, first move cursor to control smoothly
         '''
-        elm = cls._element()
+        elm = WinElement._element()
         try:
             elm.DoubleClick(ratioX = ratioX, ratioY = ratioY, simulateMove = simulateMove)
         except:
@@ -411,7 +416,7 @@ class WinActions(WinElement):
     
     @classmethod
     def WheelDown(cls, times = 1):
-        elm = cls._element()
+        elm = WinElement._element()
         try:
             elm.WheelDown(times)
         except:
@@ -419,7 +424,7 @@ class WinActions(WinElement):
     
     @classmethod
     def MouseWheelUp(cls, times = 1):        
-        elm = cls._element()
+        elm = WinElement._element()
         try:
             elm.WheelUp(times)
         except:
@@ -443,7 +448,7 @@ class WinActions(WinElement):
         SendKeys('`~!@#$%^&*()-_=+{Enter}')
         SendKeys('[]{{}{}}\\|;:\'\",<.>/?{Enter}')
         """
-        elm = cls._element()
+        elm = WinElement._element()
         try:
             elm.SendKeys(text)
         except:

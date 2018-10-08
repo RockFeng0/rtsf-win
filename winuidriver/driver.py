@@ -95,7 +95,7 @@ class Driver(Runner):
                     prepare(**properties)
                                 
                 result = parser.eval_content_with_bind_actions(step["windriver"]["action"])
-                #print(":",result)
+                
                 if result == False:
                     tracer.fail(step["windriver"]["action"])
                 else:

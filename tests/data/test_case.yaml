@@ -23,16 +23,20 @@
     # 定义变量， 效果同 SetVar(name, value),选填
     glob_var:
         program: C:\Windows\System32\notepad.exe
+        title: 无标题 - 记 事本
+        keys: '{Ctrl}{End}{Enter}World'
+        verify_text: 'Hello\r'
         
     # pre_command 选填
     pre_command:
         - ${StartApplication($program)}
-        - ${TimeSleep(2)} 
+        - ${TimeSleep(2)}
+        - ${SwitchToRootControl()}
         
     # steps 必填
     steps:      
     
-        # 在windows中，定位元素
+        # 在windows中，定位元素            
         - windriver:
             ControlType: WindowControl
             ClassName: Notepad
@@ -45,14 +49,14 @@
             action: ${MoveWindowPos(400, 400)}
             
         - windriver:
-            action: ${VerifyProperty(Name, 无标题 - 记 事本)}
+            action: ${VerifyProperty(Name, $title)}
         
         - windriver:
             action: ${TimeSleep(2)} 
             
         - windriver:
             action: ${SwitchToCurrentControl()}
-        
+                    
         - windriver:
             action: ${SetSearchProperty(ControlType=EditControl, ClassName=Edit)}
             
@@ -66,25 +70,14 @@
             action: ${SetValue(Hello)}
                 
         - windriver:          
-            action: ${SendKeys({Ctrl}{End}{Enter}World)} 
+            action: ${SendKeys($keys)}
             
         - windriver:
             action: ${DyTextData(text, $rex_all)}
         
         - windriver:
-            action: ${VerifyVar(text, Helloss\r\nWorlda)}
-
-        - windriver:
-            action: ${SetVar(text, nihao)}
-            
-        - windriver:
-            action: ${GetVar(text)}
-            
-        - windriver:
-            action: ${SetSearchProperty(a=2,b=3)}
-            
-        - windriver:
-            action: ${GetSearchProperty()}
+            action: ${VerifyVar(text, $verify_text)}
+                               
                            
     # post_command 选填
     post_command:
@@ -93,18 +86,35 @@
 - case:
     id: ATP-2
     desc: simple test
-    steps: 
+    steps:
         - windriver:
-            action: ${SetVar(text1, hello)}
+            action: ${SwitchToRootControl()}
             
         - windriver:
-            action: ${GetVar(text)}
+            action: ${SetSearchProperty(ControlType=WindowControl, ClassName=Notepad, Depth=1)}    
             
         - windriver:
-            action: ${GetVar(text1)}
-            
+            action: ${MoveWindowPos()}
+        
         - windriver:
-            action: ${SetSearchProperty(c=4,d=5)}
+            action: ${TimeSleep(2)}     
+        WinWait.TimeSleep(2)
+        WinActions.CloseWin()
+        
+        WinElement.SwitchToCurrentControl()
+        WinElement.SetSearchProperty(Name = u'保存(S)', ClassName = "CCPushButton")
+        WinActions.Click(simulateMove = True)
+        WinElement.SetSearchProperty(ControlType = "EditControl", Name = u'文件名:',ClassName="Edit", AutomationId = "1001")
+        WinActions.SetValue(r'c:\some test dir')
+        WinElement.SetSearchProperty(ControlType = "ButtonControl", Name = u'取消',ClassName="Button")
+        WinActions.Invoke()
+        
+        WinElement.SwitchToRootControl()
+        WinElement.SetSearchProperty(ControlType = "WindowControl", ClassName = 'Notepad', Depth = 1)    
+        WinActions.CloseWin()
+        WinWait.TimeSleep(2)
+        WinElement.SetSearchProperty(ControlType = "ButtonControl", Name = u'不保存(N)', ClassName = "CCPushButton")
+        WinActions.Invoke()
+        
+        
             
-        - windriver:
-            action: ${GetSearchProperty()}
