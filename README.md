@@ -23,7 +23,9 @@ pip install rtsf-win
 automation中的参数示例如下:
 
 automation.py -r -d 1 -t 0 ,# print desktop(the root of control tree) and it's children(top level windows) 
+
 automation.py -t 0 -n -m ,# print current active window's controls, show fullname, show more properties
+
 automation.py -t 3 ,# 延时3秒，打印当前激活窗口的树形结构，默认深度为1; 比如，此时打开notepad.exe,等待一会，automation.py会打印Notepad的所有控件树，并保存在 @AutomationLog.txt
 
 ```
@@ -47,11 +49,11 @@ notepadWindow.Close()
 notepadWindow.ButtonControl(Name=u'不保存(N)').Invoke()
 ```
 
-另外一个 UI工具, [Inspect.exe](https://docs.microsoft.com/zh-cn/windows/desktop/WinAuto/inspect-objects) 由 Microsoft支持,也能遍历windows UI元素. 不同的是，该工具有界面，而automation是个终端输出.不过，习惯了automation，你会发现更方便
+关于uiautomation的工作原理，参见[详细介绍](http://www.cnblogs.com/Yinkaisheng/p/3444132.html)
+
+另外一个 UI工具, [Inspect.exe](https://docs.microsoft.com/zh-cn/windows/desktop/WinAuto/inspect-objects) 由 Microsoft支持,也能遍历windows UI元素。 不同的是，该工具有界面，而automation是个终端输出。不过，习惯了automation，你会发现更方便
 
 ![inspect-exe.png](https://raw.githubusercontent.com/RockFeng0/img-folder/master/rtsf-win-img/inspect-exe.png)
-
-[详细介绍](http://www.cnblogs.com/Yinkaisheng/p/3444132.html)
 
 
 ### 基本用例
