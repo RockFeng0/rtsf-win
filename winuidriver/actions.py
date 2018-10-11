@@ -42,25 +42,31 @@ class WinElement(object):
         '''
         
         cls.__control = None
-        _ = [cls.__prop.pop(prop) for prop in ('ControlType',"ClassName","AutomationId","Name","SubName","RegexName","Depth") if cls.__prop.get(prop)]
+        _ = [cls.__prop.pop(prop) for prop in ('ControlType',"ClassName","AutomationId","Name","SubName","RegexName","Depth") if cls.__prop.get(prop)]        
         cls.__prop.update(kwargs)        
         cls.__prop.update({"index":1, "timeout":10})
-    
-    @classmethod
-    def GetSearchProperty(cls):
-        return cls.__prop
         
     @classmethod
     def SwitchToCurrentControl(cls):
         ''' switch to the child control '''
-                
-        cls.__handles[0] = (cls.__handles[-1]["Handle"], uiautomation.ControlFromHandle(cls.__handles[-1]["Handle"]))
+        __root = cls._element()
+        cls.__handles[0] = (__root.Handle, __root)
         
     @classmethod
     def SwitchToRootControl(cls):
         ''' switch to root control and init handles '''
         __root = uiautomation.GetRootControl()        
-        WinElement.__handles = [(__root.Handle, __root), {"Handle":__root.Handle, "Name":__root.Name}]        
+        cls.__handles = [(__root.Handle, __root), {"Handle":__root.Handle, "Name":__root.Name}]  
+    
+    @classmethod
+    def _get_search_property(cls):
+        ''' get dict properties of windows UI'''
+        return cls.__prop
+    
+    @classmethod
+    def _get_handles(cls):
+        ''' get handles of windows UI'''
+        return cls.__handles
         
     @classmethod
     def _element(cls):
@@ -159,56 +165,31 @@ class WinVerify(object):
         return WinContext.GetVar(name) == expect_value
     
     @classmethod
-    def VerifyProperty(cls, attr, expect_value):        
-        try:
-            if attr in ('ClassName', 'ControlTypeName', 'Name', 'AutomationId'):                
-                result = getattr(WinElement._element(), attr) == expect_value                
-            else:
-                result = False
-        except:
-            result = False
-        finally:
-            return result
+    def VerifyProperty(cls, attr, expect_value):
+        if attr in ('ClassName', 'ControlTypeName', 'Name', 'AutomationId'):                
+            return getattr(WinElement._element(), attr) == expect_value                
+        else:
+            return False
     
     @classmethod
-    def VerifyKeyboardFocusable(cls):
-        try:
-            result = WinElement._element().IsKeyboardFocusable()
-        except:
-            result = False
-        return result
+    def VerifyKeyboardFocusable(cls):        
+        return True if WinElement._element().IsKeyboardFocusable else False
     
     @classmethod
-    def VerifyElemKeyboardFocus(cls):
-        try:
-            result = WinElement._element().HasKeyboardFocus()                          
-        except:
-            result = False
-        return result
-        
+    def VerifyKeyboardFocused(cls):
+        return True if WinElement._element().HasKeyboardFocus else False
+            
     @classmethod
     def VerifyElemEnabled(cls):
-        try:
-            result = WinElement._element().IsEnabled()                          
-        except:
-            result = False
-        return result
+        return True if WinElement._element().IsEnabled else False
             
     @classmethod
     def VerifyExist(cls):
-        try:
-            result = True if WinElement._element() else False
-        except:
-            result = False
-        return result
+        return True if WinElement._element() else False
         
     @classmethod
     def VerifyNotExist(cls):
-        try:
-            result = False if WinElement._element() else True
-        except:
-            result = True
-        return result
+        return False if WinElement._element() else True
     
             
 class WinActions(object):
@@ -222,7 +203,7 @@ class WinActions(object):
     @classmethod
     def SetWinStat(cls,value):       
         
-        stat = ["Normal", "Max", "Min"]
+        stat = ["Normal", "Maximize", "Minimize"]
         if not value.capitalize() in stat:
             raise ValueError("SetWinStat need [Normal,Max,Min].")
         
