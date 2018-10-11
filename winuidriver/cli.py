@@ -22,14 +22,14 @@ Provide a function for the automation test
 import argparse
 from rtsf.p_applog import color_print,logger
 from rtsf.p_executer import TestRunner
-from httpdriver.driver import Driver
-from httpdriver.__about__ import __version__
+from winuidriver.driver import Driver
+from winuidriver.__about__ import __version__
     
     
-def main_hrun():
+def main_run():
     """ parse command line options and run commands."""
     
-    parser = argparse.ArgumentParser(description="Tools for http(s) test. Base on rtsf.")
+    parser = argparse.ArgumentParser(description="Tools for Windows MFC UI and WPF UI test. Base on rtsf.")
             
     parser.add_argument(
         '--log-level', default='INFO',
@@ -43,13 +43,10 @@ def main_hrun():
         'case_file', 
         help="yaml testcase file")
     
-    color_print("httpdriver {}".format(__version__), "GREEN")
+    color_print("windriver {}".format(__version__), "GREEN")
     args = parser.parse_args()
     logger.setup_logger(args.log_level, args.log_file)    
     
     runner = TestRunner(runner = Driver).run(args.case_file)
     html_report = runner.gen_html_report()
     color_print("report: {}".format(html_report))
-
-if __name__ == "__main__":
-    main_hrun()
