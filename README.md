@@ -173,139 +173,149 @@ windriver C:\f_disk\BaiduNetdiskDownload\rtsf-win\tests\data\test_case.yaml
 > 执行结束后，测试用例所在路径，就是report生成的路径
 
 
---------------- below, to do-------------------------
 
 ## 封装的关键字(内置函数)
 
 关键字的使用，在前面，有介绍，规则如下
 > 变量引用-> $var    关键字(函数)引用-> ${function}
 
-### 浏览器相关操作
-
-Web functions | 参数介绍 | 描述
---------------|----------|-----
-AlertAccept()        | |点击alert弹窗的Accept(确定)
-AlertDismiss()       | |点击alert弹窗的Dismiss(取消)
-AlertSendKeys(value) | |向alert弹窗中输入信息
-Back()               | |浏览器后退
-Forward()            | |浏览器前进
-IESkipCertError()    | |IE Skip SSL Cert Error
-Js(script)           | |浏览器执行js脚本
-Maximize()           | |浏览器最大化
-NavigateTo(url)      | |浏览器打开url
-NewTab()             | |浏览器新开标签页，并将所有焦点指向该标签页
-PageSource()         | |当前页面源码
-Refresh()            | |浏览器刷新当前页面
-ScreenShoot(pic_path)| |截图当前页面，并为pic_path
-ScrollTo(x,y)        | |移动滚动条至(x,y),如下，X-Y-top :  ScrollTo("0","0"); X-bottom:  ScrollTo("10000","0");Y-bottom:  ScrollTo("0","10000")
-SetWindowSize(width, height)| |设置浏览器窗口大小
-SwitchToAlert()             | |切换浏览器焦点至alert弹窗
-SwitchToDefaultFrame()      | |切换浏览器焦点至默认frame框, 比如打开的页面有多个iframe的情况
-SwitchToDefaultWindow()     | |切换浏览器焦点至默认window窗,比如多个标签页窗的情况
-SwitchToNewFrame(frame_name)| |切换浏览器焦点至frame_name框
-SwitchToNewWindow()         | |切换浏览器焦点至新window窗
-WebClose()                  | |关闭浏览器当前窗口
-WebQuit()                   | |Quits the driver and closes every associated window.
-
 ###  元素定位相关操作
 
 <table>
     <tr>
-        <th>WebElement methods</th>
+        <th>WinElement methods</th>
         <th>参数介绍</th>
         <th>描述</th>
     </tr>
     <tr>
-        <td>GetControl()</td>
-        <td> </td>
-        <td>获取element controls,返回字典，如：{"by":None,"value":None,"index":0,"timeout":10}</td>
+        <td rowspan="8">SetSearchProperty(**kwargs)</td>
+        <td>kwargs是个字典，keys: ("ControlType","ClassName","AutomationId","Name","SubName","RegexName","Depth")</td>
+        <td rowspan="8">设置需要寻找的UI元素控件属性，通过属性定位该控件 </td>                
     </tr>
     <tr>
-        <td rowspan="4">SetControl(by,value,index,timeout)</td>
-        <td>by: 指selenium的寻找元素的方式("id", "xpath", "link text","partial link text","name", "tag name", "class name", "css selector")，默认为None</td>
-        <td rowspan="4">设置取element controls</td>
+        <td>ControlType</td>
+        <td>str or unicode</td>
+        <td>always suggest to use, because some ControlType has special pattern functions</td>
     </tr>
     <tr>
-        <td>value: 与by配对使用，相应by的值</td>
+        <td>ClassName</td>
+        <td>str or unicode</td>
+        <td>控件ClassName</td>
     </tr>
     <tr>
-        <td>index: 索引值，默认为0，即第一个， 如果by,value组合找到很多元素，通过索引index指定一个</td>
+       <td>AutomationId</td>
+       <td>str or unicode</td>
+       <td>控件AutomationId</td>
+   </tr>
+   <tr>
+       <td>Name</td>
+       <td>str or unicode</td>
+       <td>控件Name</td>
+   </tr>
+   <tr>
+       <td>SubName</td>
+       <td>str or unicode</td>
+       <td>控件SubName</td>
+   </tr>
+   <tr>
+       <td>RegexName</td>
+       <td>str or unicode, supports regex</td>
+       <td>正则表达式，用于控件Name</td>
+   </tr>
+   <tr>
+       <td>Depth</td>
+       <td>integer</td>
+       <td>控件搜索的深度，默认是最大值:260</td>
+   </tr>
+   <tr>
+        <td>SwitchToCurrentControl()</td>
+        <td></td>
+        <td>切换到当前控件，以此作为搜索的根控件. **配合SetSearchProperty使用**</td>                
     </tr>
     <tr>
-       <td>timeout: 超时时间，默认10，即10秒，如果by,value组合寻找元素超过10秒，超时报错</td>
-   </tr>    
+        <td>SwitchToRootControl()</td>
+        <td></td>
+        <td>切换到根控件(桌面)，以此作为搜索的根控件. **配合SetSearchProperty使用**</td>                
+    </tr>   
 </table>
-                                                   
 
-### WebContext methods --> 用于上下文管理
+                
+### WinContext methods --> 用于上下文管理
 ```
-DyAttrData(name,attr)                       # -> 属性-动态存储变量，适用于，保存UI元素属性值。name-变量名称，attr为UI元素的属性名称，**配合SetControl使用**
-DyJsonData(name,sequence)                   # -> json-动态存储变量，适用于，保存页面返回json中的指定值。 name-变量名称，sequence是指访问json的序列串
-                                                    示例,页面返回 {"a":1,
-                                                            "b":[1,2,3,4],
-                                                            "c":{"d":5,"e":6},
-                                                            "f":{"g":[7,8,9]},
-                                                            "h":[{"i":10,"j":11},{"k":12}]
-                                                            }
-                                                        DyJsonData("var1","a")      #var1值为 1
-                                                        DyJsonData("var2","b.3")    #var2值为 4
-                                                        DyJsonData("var3","f.g.2")  #var3值为 9
-                                                        DyJsonData("var4","h.0.j")  #var4值为 11
-DyStrData(name, regx, index)                # -> 字符串-动态存储变量，适用于，保存页面html中指定的值。 name-变量名称，regx已编译的正则表达式，index指定索引，默认0
-GetAttribute(attr)                          # -> 获取元素指定属性的值， **配合SetControl使用**
-GetText()                                   # -> 获取元素text值，**配合SetControl使用**
+DyPropertyData(var, attr)                   # -> 属性-动态存储变量，适用于，保存UI元素属性值。var-变量名称，attr为UI元素的属性名称，**配合SetSearchProperty使用**
+DyTextData(var, regx, index)                # -> 字符串-动态存储变量，适用于，保存文本控件中指定的值。 var-变量名称，regx已编译的正则表达式，index指定索引，默认0
+
 GetVar(name)                                # -> 获取指定变量的值
 SetVar(name,value)                          # -> 设置指定变量的值
 ```
 
-### WebWait methods --> 用于时间的控制
+### WinWait methods --> 用于时间的控制
 ```
 TimeSleep(seconds)                   # -> 指定等待时间(秒钟)
-WaitForAppearing()                   # -> 等待元素出现(可能是隐藏，不可见的)，**配合SetControl使用**
-WaitForDisappearing()                # -> 等待元素消失，**配合SetControl使用**
-WaitForVisible()                     # -> 等待元素可见，**配合SetControl使用**
+WaitForExist(timeout)                # -> 等待元素，timeout设置超时时间，单位秒，**配合SetSearchProperty使用**
+WaitForDisappear(timeout)            # -> 等待元素消失，timeout设置超时时间，单位秒，**配合SetSearchProperty使用**
 ```
 
-### WebVerify methods --> 用于验证
+### WinVerify methods --> 用于验证
 ```
-VerifyAlertText(text)                        # -> 验证alert弹窗，包含文本text
-VerifyElemAttr(attr_name,expect_value)       # -> 验证元素属性attr_name的值，包含值expect_value,**配合SetControl使用**
-VerifyElemCounts(num)                        # -> 验证元素数量为num,**配合SetControl使用**
-VerifyElemEnabled()                          # -> 验证元素是enabled，**配合SetControl使用**
-VerifyElemInnerHtml(expect_text)             # -> 验证元素innerHtml中，包含期望文本， **配合SetControl使用**
-VerifyElemNotEnabled()                       # -> 验证元素是Not Enabled, **配合SetControl使用**
-VerifyElemNotVisible()                       # -> 验证元素是不可见的，**配合SetControl使用**
-VerifyElemVisible()                          # -> 验证元素是可见的， **配合SetControl使用**
-VerifyTitle(title)                           # -> 验证浏览器标题为title
-VerifyURL(url)                               # -> 验证浏览器当前url为期望值
+VerifyVar(name, expect_value)              # -> 验证变量值，变量name的值是expect_value
+VerifyProperty(attr, expect_value)         # -> 验证元素属性attr的值，包含值expect_value,**配合SetSearchProperty使用**
+VerifyKeyboardFocusable()                  # -> 验证该控件是否可被键盘聚焦，**配合SetSearchProperty使用**
+VerifyKeyboardFocused()                    # -> 验证该控件已被键盘聚焦，**配合SetSearchProperty使用**
+VerifyElemEnabled()                        # -> 验证该控件已启用，**配合SetSearchProperty使用**
+VerifyNotExist()                           # -> 验证该控件不存在，**配合SetSearchProperty使用**
 ```
 
-### WebActions methods --> 用于浏览器操作
+### WinActions methods --> 用于Windows UI（WPF or MFC）操作
 ```
-Alt(key)                     # -> 在指定元素上执行alt组合事件，**配合SetControl使用**
-Backspace()                  # -> 在指定输入框发送回退键，**配合SetControl使用**
-Click()                      # -> 在指定元素上，左键点击 1次，**配合SetControl使用**
-ClickAndHold()               # -> 在指定元素上， 按压press住，**配合SetControl使用**
-Ctrl(key)                    # ->  在指定元素上执行ctrl组合键事件，**配合SetControl使用**
-DeSelectByIndex(index)       # -> 通过索引，取消选择下拉框选项，**配合SetControl使用**
-DeSelectByText(text)         # -> 通过文本值，取消选择下拉框选项，**配合SetControl使用**
-DeSelectByValue(value)       # -> 通过value值，取消选择下拉框选项，**配合SetControl使用**
-DoubleClick()                # -> 鼠标左键点击2次，**配合SetControl使用**
-Enter()                      # -> 在指定输入框发送回回车键,**配合SetControl使用**
-Escape()                     # -> 在指定输入框发送回退出键,**配合SetControl使用**
-Focus()                      # -> 在指定输入框发送 Null,用于设置焦点，**配合SetControl使用**
-MouseOver()                  # -> 指定元素上，鼠标悬浮，**配合SetControl使用**
-MoveAndDropTo()              # -> 暂不支持
-ReleaseClick()               # -> 在指定元素上，释放按压操作，**配合SetControl使用**
-RightClick()                 # -> 在指定元素上，鼠标右键点击1次，**配合SetControl使用**
-SelectByIndex(index)         # -> 通过索引，选择下拉框选项，**配合SetControl使用**
-SelectByText(text)           # -> 通过文本值，选择下拉框选项，**配合SetControl使用**
-SelectByValue(value)         # -> 通过value值，选择下拉框选项，**配合SetControl使用**
-SendKeys(value)              # -> 在指定元素上，输入文本，**配合SetControl使用**
-Space()                      # -> 在指定元素上,发送空格，**配合SetControl使用**
-Tab()                        # -> 在指定元素上,发送回制表键，**配合SetControl使用**
-Upload(filename)             # -> 暂不支持。非原生，需要第三方工具
-UploadType(file_path)        # -> 上传文件，仅原生file文件框, 如： <input type="file" ...>, **配合SetControl使用**
+
+StartApplication(app_path)                    # -> 运行指定路径（app_path）的应用程序
+SetWinStat(state)                             # -> 设置window窗口状态，值：Normal、Maximize、Minimize。隶属WindowPattern，**配合SetSearchProperty使用**
+ActivateWindow()                              # -> 激活window窗口并设置焦点。隶属WindowPattern，**配合SetSearchProperty使用**
+SetTopmost(is_top_most)                       # -> 设置windows窗口是否置顶，is_top_most默认为True。隶属WindowPattern，**配合SetSearchProperty使用**
+MoveWindowPos(x, y)                           # -> 移动windows窗口，默认(x=-1,y=-1)移动到屏幕中心。隶属WindowPattern，**配合SetSearchProperty使用**
+CloseWin()                                    # -> 关闭windows窗口。隶属WindowPattern，**配合SetSearchProperty使用**
+Invoke()                                      # -> 触发控件Invoke事件，类似于点击。隶属InvokePattern，**配合SetSearchProperty使用**
+SetValue(value)                               # -> 触发控件SetValue事件，类似于设置文本值。隶属ValuePattern，**配合SetSearchProperty使用**
+CurrentValue()                                # -> 触发控件CurrentValue事件，类似于获取文本值。隶属ValuePattern，**配合SetSearchProperty使用**
+ScrollTo(horizontalPercent,verticalPercent)   # -> 触发控件ScrollTo事件，参数值为横纵百分比区间(0,100)，类似滚动滚动条。隶属ScrollPattern，**配合SetSearchProperty使用**      
+CheckOn()                                     # -> 触发控件CheckOn事件，勾选复选框。隶属TogglePattern，**配合SetSearchProperty使用**  
+CheckOff()                                    # -> 触发控件CheckOff事件，取消勾选复选框。隶属TogglePattern，**配合SetSearchProperty使用**
+ExpandOn()                                    # -> 触发控件ExpandOn事件，展开下拉框。隶属ExpandCollapsePattern，**配合SetSearchProperty使用**
+ExpandOff()                                   # -> 触发控件ExpandOff事件，收起下拉框。隶属ExpandCollapsePattern，**配合SetSearchProperty使用**  
+SelectItem()                                  # -> 触发控件SelectItem事件，在组合框、 列表框、选项卡等展开操作后，选择条目。隶属SelectionItemPattern，**配合SetSearchProperty使用**
+Click(ratioX,ratioY,simulateMove)             # -> 在指定控件中，鼠标左键单击，参数都有默认值。隶属Win32API，**配合SetSearchProperty使用**
+    示例如：
+    Click(): click center and move cursor to control smoothly
+    Click(10, 10): click left+10, top+10
+    Click(-10, -10): click right-10, bottom-10
+    simulateMove: bool, if True, first move cursor to control smoothly
+
+DoubleClick(ratioX,ratioY,simulateMove)       # -> 在指定控件中，鼠标左键双击，用法同Click。隶属Win32API，**配合SetSearchProperty使用**
+WheelDown(times)                              # -> 在指定控件中，滚轮向下滑动几次，times参数为整数。隶属Win32API，**配合SetSearchProperty使用**
+WheelUp(times)                                # -> 在指定控件中，滚轮向上滑动几次，times参数为整数。隶属Win32API，**配合SetSearchProperty使用**
+SendKeys(text)                                # -> 在指定空间中，模拟发送keys,
+    示例如：
+    #press Ctrl+a, Delete, Ctrl+v, Ctrl+s, Ctrl+Shift+s, Win+e, PageDown
+    SendKeys('{Ctrl}a{Delete}{Ctrl}v{Ctrl}s{Ctrl}{Shift}s{Win}e{PageDown}')
+    
+    #press Ctrl+A+B, type (, press Shift+1+2+3, type ), if () follows a hold key, hold key won't release util ) 
+    SendKeys('{Ctrl}(AB)({Shift}(123))')
+    
+    #press Ctrl+a at the same time, release Ctrl+a, then type a 2 times 
+    SendKeys('{Ctrl}{a 3}')
+    
+    #type a 3 times, type B 5 times 
+    SendKeys('{a 3}{B 5}') 
+    
+    #type: {Hello}abc abc test}}}!a ()()
+    SendKeys('{{}Hello{}}abc {a}{b}{c} test{} 3}{!}{a} (){(}{)}')
+    SendKeys('0123456789{Enter}')
+    SendKeys('ABCDEFGHIJKLMNOPQRSTUVWXYZ{Enter}')
+    SendKeys('abcdefghijklmnopqrstuvwxyz{Enter}')
+    SendKeys('`~!@#$%^&*()-_=+{Enter}')
+    SendKeys('[]{{}{}}\\|;:\'\",<.>/?{Enter}')
+        
 ```
 
 

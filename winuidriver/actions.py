@@ -21,7 +21,6 @@ Provide a function for the automation test
 
 import os,time,subprocess,re
 import uiautomation
-from builtins import classmethod
 
 class WinElement(object):
     
@@ -223,7 +222,7 @@ class WinActions(object):
             return False
     
     @classmethod
-    def SetTopmost(cls, is_top_most = False):
+    def SetTopmost(cls, is_top_most = True):
         ''' 置顶    '''
         elm = WinElement._element()        
         if elm.IsWindowPatternAvailable():
@@ -278,7 +277,7 @@ class WinActions(object):
         
     @classmethod
     def CurrentValue(cls):
-        ''' Set text value, just like type in some string '''
+        ''' Get text value, just like type in some string '''
         elm = WinElement._element()
         if elm.IsValuePatternAvailable():            
             return elm.CurrentValue()
@@ -289,8 +288,8 @@ class WinActions(object):
     @classmethod
     def ScrollTo(cls,horizontalPercent=-1,verticalPercent=-1):
         ''' 
-        :param horizontalPercent=-1 表示纵向滚动条; verticalPercent=100，表示向下移动100%,即移动到底; verticalPercent=0，表示顶端
-        :param verticalPercent=-1 表示横向滚动条; horizontalPercent=100，表示向右移动100%,即移动到最右; horizontalPercent=0，表示左侧       
+        :param horizontalPercent=-1 示横向滚动条; horizontalPercent=100，表示向右移动100%,即移动到最右; horizontalPercent=0，表示左侧
+        :param verticalPercent=-1 表示纵向滚动条; verticalPercent=100，表示向下移动100%,即移动到底; verticalPercent=0，表示顶端       
         '''
         
         elm = WinElement._element()        
@@ -403,7 +402,7 @@ class WinActions(object):
             return False
     
     @classmethod
-    def MouseWheelUp(cls, times = 1):        
+    def WheelUp(cls, times = 1):        
         elm = WinElement._element()
         try:
             elm.WheelUp(times)
