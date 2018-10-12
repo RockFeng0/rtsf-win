@@ -184,7 +184,8 @@ windriver C:\f_disk\BaiduNetdiskDownload\rtsf-win\tests\data\test_case.yaml
 <table>
     <tr>
         <th>WinElement methods</th>
-        <th colspan="2">参数介绍</th>
+        <th>参数</th>
+        <th>参数类型</th>
         <th>描述</th>
     </tr>
     <tr>
