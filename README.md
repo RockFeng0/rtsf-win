@@ -190,7 +190,7 @@ windriver C:\f_disk\BaiduNetdiskDownload\rtsf-win\tests\data\test_case.yaml
     <tr>
         <td rowspan="8">SetSearchProperty(**kwargs)</td>
         <td>kwargs是个字典，key如下</td>
-        <td rowspan="8">设置需要寻找的UI元素控件属性，通过属性定位该控件 </td>                
+        <td>设置需要寻找的UI元素控件属性，通过属性定位该控件 </td>                
     </tr>
     <tr>
         <td>ControlType</td>
