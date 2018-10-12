@@ -184,8 +184,8 @@ windriver C:\f_disk\BaiduNetdiskDownload\rtsf-win\tests\data\test_case.yaml
 <table>
     <tr>
         <th>WinElement methods</th>
-        <th>参数介绍</th>
-        <th colspan="2">描述</th>
+        <th colspan="2">参数介绍</th>
+        <th>描述</th>
     </tr>
     <tr>
         <td rowspan="7">SetSearchProperty(**kwargs)</td>
@@ -225,13 +225,13 @@ windriver C:\f_disk\BaiduNetdiskDownload\rtsf-win\tests\data\test_case.yaml
    </tr>
    <tr>
         <td>SwitchToCurrentControl()</td>
-        <td></td>
-        <td colspan="2">切换到当前控件，以此作为搜索的根控件. **配合SetSearchProperty使用**</td>                
+        <td colspan="2"></td>
+        <td>切换到当前控件，以此作为搜索的根控件. **配合SetSearchProperty使用**</td>                
     </tr>
     <tr>
         <td>SwitchToRootControl()</td>
-        <td></td>
-        <td colspan="2">切换到根控件(桌面)，以此作为搜索的根控件. **配合SetSearchProperty使用**</td>                
+        <td colspan="2"></td>
+        <td>切换到根控件(桌面)，以此作为搜索的根控件. **配合SetSearchProperty使用**</td>                
     </tr>   
 </table>
 
