@@ -190,7 +190,7 @@ windriver C:\f_disk\BaiduNetdiskDownload\rtsf-win\tests\data\test_case.yaml
     <tr>
         <td rowspan="8">SetSearchProperty(**kwargs)</td>
         <td>kwargs是个字典，key如下</td>
-        <td>设置需要寻找的UI元素控件属性，通过属性定位该控件 </td>                
+        <td colspan="2">设置需要寻找的UI元素控件属性，通过属性定位该控件 </td>                
     </tr>
     <tr>
         <td>ControlType</td>
@@ -230,12 +230,12 @@ windriver C:\f_disk\BaiduNetdiskDownload\rtsf-win\tests\data\test_case.yaml
    <tr>
         <td>SwitchToCurrentControl()</td>
         <td></td>
-        <td>切换到当前控件，以此作为搜索的根控件. **配合SetSearchProperty使用**</td>                
+        <td colspan="2">切换到当前控件，以此作为搜索的根控件. **配合SetSearchProperty使用**</td>                
     </tr>
     <tr>
         <td>SwitchToRootControl()</td>
         <td></td>
-        <td>切换到根控件(桌面)，以此作为搜索的根控件. **配合SetSearchProperty使用**</td>                
+        <td colspan="2">切换到根控件(桌面)，以此作为搜索的根控件. **配合SetSearchProperty使用**</td>                
     </tr>   
 </table>
 
