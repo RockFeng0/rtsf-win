@@ -1,0 +1,33 @@
+            
+- project:
+    name: xxx项目
+    module: xxx项目-首页功能-数据驱动
+    data:
+        - csv: devices.csv
+          by: Random
+        
+- case:
+    name: windows_ui_auto_test_data_driver_demo_$device    
+    glob_var:
+        program: C:\Windows\System32\notepad.exe        
+        
+    pre_command:
+        - ${StartApplication($program)}
+        - ${TimeSleep(2)}
+        - ${SwitchToRootControl()}
+        
+    steps:      
+    
+        # 在windows中，定位元素            
+        - windriver:
+            ControlType: WindowControl
+            ClassName: Notepad
+            Depth: 1
+            index: 1
+            timeout: 10
+            action: ${ActivateWindow()}
+            
+        - windriver:
+            action: ${CloseWin()}
+            
+                        

@@ -26,7 +26,7 @@ from rtsf.p_exception import FunctionNotFound,VariableNotFound
 
 class Driver(Runner):
         
-    def run_test(self, testcase_dict, driver_map):
+    def run_test(self, testcase_dict, variables, driver_map):
         fn, _ = driver_map
         tracer = self.tracers[fn]
         parser = self.parser        
@@ -46,9 +46,11 @@ class Driver(Runner):
         functions.update(win_verify_functions)
         functions.update(win_wait_functions)
         parser.bind_functions(functions)
+        
+        _Actions.WinContext.glob.update(variables)        
         parser.update_binded_variables(_Actions.WinContext.glob)
          
-        case_name = testcase_dict["name"]                 
+        case_name = parser.eval_content_with_bind_actions(testcase_dict["name"])
         tracer.start(self.proj_info["module"], case_name, testcase_dict.get("responsible","Administrator"), testcase_dict.get("tester","Administrator"))        
         tracer.section(case_name)
         

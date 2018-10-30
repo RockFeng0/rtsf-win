@@ -28,17 +28,26 @@ class TestDriver(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.case_file = r'data\test_case.yaml'
+        cls.data_driver_case = r'data\data_driver.yaml'
     
     def test_Driver(self):        
         runner = TestRunner(runner = Driver).run(self.case_file)
         html_report = runner.gen_html_report()
         print(html_report)
         self.assertIsInstance(html_report, (list, tuple))
-        
-        
+    
+    def test_Driver_with_data_driver(self):        
+        runner = TestRunner(runner = Driver).run(self.data_driver_case)
+        html_report = runner.gen_html_report()
+        print(html_report)
+        self.assertIsInstance(html_report, (list, tuple))
+                
 if __name__ == "__main__":
-    logger.setup_logger("debug")
-    unittest.main()
-    runner = TestRunner(runner = Driver).run(r'data\test_case.yaml')
-    html_report = runner.gen_html_report()
-    print(html_report)
+    #logger.setup_logger("debug")
+    #unittest.main()
+    suite = unittest.TestSuite()
+    suite.addTest(TestDriver("test_Driver_with_data_driver"))
+    runner = unittest.TextTestRunner(verbosity=2)
+    runner.run(suite)
+    
+    
